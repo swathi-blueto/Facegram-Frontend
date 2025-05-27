@@ -250,12 +250,12 @@ class FriendService {
 
       if (responseData is Map<String, dynamic> && responseData.containsKey('data')) {
         return (responseData['data'] as List)
-            .where((friend) => friend['id'] != userId) // Filter out current user
+            .where((friend) => friend['id'] != userId) 
             .map((json) => PotentialFriend.fromJson(json as Map<String, dynamic>))
             .toList();
       } else if (responseData is List) {
         return responseData
-            .where((friend) => friend['id'] != userId) // Filter out current user
+            .where((friend) => friend['id'] != userId) 
             .map((json) => PotentialFriend.fromJson(json as Map<String, dynamic>))
             .toList();
       }

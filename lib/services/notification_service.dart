@@ -54,7 +54,7 @@ class NotificationService {
               fromUser = userResponse;
             }
 
-            await _showLocalNotification(
+            await showLocalNotification(
               title:
                   '${fromUser['first_name'] ?? 'Someone'} sent you a ${_getNotificationTitle(data.first['type'])}',
               body: data.first['message'] ?? '',
@@ -66,7 +66,7 @@ class NotificationService {
         });
   }
 
-  Future<void> _showLocalNotification({
+  Future<void> showLocalNotification({
     required String title,
     required String body,
     required String payload,

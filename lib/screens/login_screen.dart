@@ -19,17 +19,23 @@ class _LoginScreenState extends State<LoginScreen> {
     final password = passwordController.text;
 
     try {
-      await AuthService.login(email, password);
+      final response = await AuthService.login(email, password);
+      final role = response['role'] ?? 'user';
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Login Successful")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Login Successful")),
+      );
 
-      Navigator.pushReplacementNamed(context, '/home');
+      // Navigate based on role
+      if (role == 'admin') {
+        Navigator.pushReplacementNamed(context, '/admin-dashboard');
+      } else {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Login Failed: $e")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Login Failed: $e")),
+      );
     }
   }
 

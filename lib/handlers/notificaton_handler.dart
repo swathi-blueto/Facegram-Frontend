@@ -44,3 +44,4 @@ class _NotificationHandlerState extends State<NotificationHandler> {
     return widget.child;
   }
 }
+

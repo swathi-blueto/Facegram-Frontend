@@ -4,7 +4,39 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:project/constants/api_constants.dart';
 
 class AuthService {
-  static Future<Map<String, dynamic>> login(
+  // static Future<Map<String, dynamic>> login(
+  //   String email,
+  //   String password,
+  // ) async {
+  //   final url = Uri.parse(ApiConstants.login);
+
+  //   final response = await http.post(
+  //     url,
+  //     headers: {"Content-Type": "application/json"},
+  //     body: jsonEncode({"email": email, "password": password}),
+  //   );
+
+  //   if (response.statusCode == 200) {
+  //     final data = jsonDecode(response.body);
+
+      
+
+  //     final prefs = await SharedPreferences.getInstance();
+  //     await prefs.setString('token', data['token']);
+
+  //     final user = data['id'];
+  //     await prefs.setString('userId', user);
+
+  //     return data;
+  //   } else {
+  //     final error = jsonDecode(response.body);
+  //     print(error);
+  //     throw Exception(error['error'] ?? 'Login failed');
+  //   }
+  // }
+
+
+   static Future<Map<String, dynamic>> login(
     String email,
     String password,
   ) async {
@@ -19,13 +51,10 @@ class AuthService {
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
 
-      
-
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('token', data['token']);
-
-      final user = data['id'];
-      await prefs.setString('userId', user);
+      await prefs.setString('userId', data['id']);
+      await prefs.setString('role', data['role'] ?? 'user'); // Store the role
 
       return data;
     } else {
@@ -87,5 +116,10 @@ class AuthService {
   static Future<String?> getCurrentUserId() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('userId');
+  }
+
+   static Future<String?> getRole() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('role');
   }
 }

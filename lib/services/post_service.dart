@@ -220,6 +220,8 @@
 
 
 
+import 'dart:io';
+
 import 'package:project/constants/api_constants.dart';
 import 'package:project/services/auth_service.dart';
 import 'package:flutter/material.dart';
@@ -450,4 +452,57 @@ class PostService {
       return null;
     }
   }
+
+
+  // Add this to your PostService class
+static Future<void> createPost({
+  required String userId,
+  required String content,
+  required String visibility,
+  File? imageFile,
+}) async {
+  try {
+    final token = await AuthService.getToken();
+    if (token == null) {
+      throw Exception('User not authenticated');
+    }
+
+    final url = Uri.parse(ApiConstants.createPost);
+    
+    // Create a multipart request
+    var request = http.MultipartRequest('POST', url);
+    
+    // Add headers
+    request.headers['Authorization'] = 'Bearer $token';
+    
+    // Add fields
+    request.fields['user_id'] = userId;
+    request.fields['content'] = content;
+    request.fields['visibility'] = visibility;
+    
+    // Add image if exists
+    if (imageFile != null) {
+      request.files.add(await http.MultipartFile.fromPath(
+        'image_file',
+        imageFile.path,
+      ));
+    }
+    
+    // Add the data as a JSON string
+    request.fields['data'] = jsonEncode({
+      'user_id': userId,
+      'content': content,
+      'visibility': visibility,
+    });
+
+    final response = await request.send();
+    final responseBody = await response.stream.bytesToString();
+
+    if (response.statusCode != 201) {
+      throw Exception('Failed to create post: ${response.statusCode} - $responseBody');
+    }
+  } catch (e) {
+    throw Exception('Error creating post: ${e.toString()}');
+  }
+}
 }

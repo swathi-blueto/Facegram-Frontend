@@ -6,6 +6,7 @@ class ApiConstants {
   static const String login = '$baseUrl/auth/login';
   static const String register = '$baseUrl/auth/register';
   static const String logout ='$baseUrl/auth/logout';
+  static const String createPost = '$baseUrl/posts';
   static const String getPosts = '$baseUrl/posts';
   static const String getPostsById = '$baseUrl/posts/:id';
   static const String likePost= '$baseUrl/posts/:id/like';
@@ -15,7 +16,6 @@ class ApiConstants {
   static const String fetchUserDetails = '$baseUrl/users/:userId';
   static const String editUserProfile = '$baseUrl/users/:userId';
   static const String updateProfile = '$baseUrl/users/:id';
-
   static const String sendFriendRequest = '$baseUrl/friends/requests/:userId';
   static const String acceptFriendRequest = '$baseUrl/friends/requests/:userId/accept';
   static const String cancelFriendRequest = '$baseUrl/friends/requests/:userId/cancel';
@@ -28,4 +28,10 @@ class ApiConstants {
   static const String getMessages = '$baseUrl/chats/:chatId';
   static const String sendMessage = '$baseUrl/chats/:chatId/messages';
   static const String deleteMessage = '$baseUrl/messages/:messageId';
+
+static const String adminUsers = '$baseUrl/admin/users';
+static const String adminBlockUser = '$baseUrl/admin/users/:userId/block';
+static const String adminUnblockUser = '$baseUrl/admin/users/:userId/unblock';
+static const String adminPosts = '$baseUrl/admin/posts';
+static const String adminDeletePost = '$baseUrl/admin/posts/:postId';
 }

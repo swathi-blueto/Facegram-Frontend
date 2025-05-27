@@ -255,11 +255,11 @@
 
 
 
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:project/models/user_profile.dart';
 import 'package:project/services/auth_service.dart';
-
 import 'package:project/services/notification_service.dart';
 import 'package:project/services/user_service.dart';
 import 'package:project/widgets/home/badgedicon.dart';
@@ -340,7 +340,7 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
 
-    final routes = ['/home', '/friends', '/reels', '/notifications'];
+    final routes = ['/home', '/friends', '/create-post', '/notifications'];
     if (index < routes.length) {
       Navigator.pushReplacementNamed(context, routes[index]);
     }
@@ -466,7 +466,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               readOnly: true,
-              onTap: () => debugPrint("Create post tapped"),
+              onTap: () => Navigator.pushNamed(context, '/create-post'),
             ),
           ),
         ],

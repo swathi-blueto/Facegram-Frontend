@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+// Update the CustomBottomNavBar widget
 class CustomBottomNavBar extends StatelessWidget {
   final int currentIndex;
   final Function(int) onTap;
@@ -30,8 +30,8 @@ class CustomBottomNavBar extends StatelessWidget {
           label: 'Friends',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.ondemand_video),
-          label: 'Reels',
+          icon: Icon(Icons.add_circle_outline,color: Colors.blueAccent,size:32),
+          label: 'Add Post',
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.notifications_none),

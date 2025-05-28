@@ -1,4 +1,5 @@
 import "package:project/handlers/notificaton_handler.dart";
+import "package:project/screens/admin_dashboard.dart";
 import "package:project/screens/contact_screen.dart";
 import "package:project/screens/createpost_screen.dart";
 import "package:project/screens/home_screen.dart";
@@ -42,6 +43,7 @@ class MyApp extends StatelessWidget {
           "/contacts": (_) => ContactsScreen(),
           "/notifications": (_) => NotificationsScreen(),
           "/create-post": (_) => CreatePostScreen(),
+          "/admin-dashboard":(_)=> AdminDashboard()
         },
       ),
     );

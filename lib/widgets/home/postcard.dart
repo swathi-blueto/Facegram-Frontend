@@ -490,7 +490,7 @@ Widget _buildNetworkImage(String imageUrl) {
       width: double.infinity,
       fit: BoxFit.cover,
       httpHeaders: const {
-        'Accept': 'image/*', // Ensure we only accept image responses
+        'Accept': 'image/*', 
       },
       progressIndicatorBuilder: (context, url, progress) => Container(
         height: 250,
@@ -566,7 +566,7 @@ Widget _buildImageErrorWidget() {
               post['image_url'],
               height: 250,
               width: double.infinity,
-              fit: BoxFit.cover,
+              fit: BoxFit.contain,
               loadingBuilder: (context, child, loadingProgress) {
                 if (loadingProgress == null) return child;
                 return Container(

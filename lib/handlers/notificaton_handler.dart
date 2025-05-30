@@ -29,7 +29,11 @@ class _NotificationHandlerState extends State<NotificationHandler> {
 
   void _setupRealtimeListener() async {
     final userId = await AuthService.getCurrentUserId();
-    if (userId == null) return;
+    if (userId == null){
+      print("$userId");
+     _notificationSubscription.cancel();
+     return;
+    }
 
     final notificationService = NotificationService();
     _notificationSubscription = notificationService

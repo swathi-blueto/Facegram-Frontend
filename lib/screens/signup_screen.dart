@@ -16,27 +16,30 @@ class _SignupScreenState extends State<SignupScreen> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
-  void handleSignup() async {
-    final firstName = firstNameController.text;
-    final lastName = lastNameController.text;
-    final email = emailController.text;
-    final password = passwordController.text;
+void handleSignup() async {
+  final firstName = firstNameController.text;
+  final lastName = lastNameController.text;
+  final email = emailController.text;
+  final password = passwordController.text;
 
-    try {
-     
-      await AuthService.signup(firstName, lastName, email, password);
-
+  try {
+    final response = await AuthService.signup(firstName, lastName, email, password);
+    
+    // Check the API response structure
+    if (response['message'] == "Registered Successfully") {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Signup Successful")),
       );
-
       Navigator.pushReplacementNamed(context, '/home');
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Signup Failed: $e")),
-      );
+    } else {
+      throw Exception(response['message'] ?? 'Signup failed');
     }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Signup Failed: ${e.toString()}")),
+    );
   }
+}
 
   @override
   Widget build(BuildContext context) {

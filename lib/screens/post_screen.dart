@@ -425,7 +425,7 @@ class _PostsScreenState extends State<PostsScreen> {
             Image.network(
               post['image_url'],
               width: double.infinity,
-              fit: BoxFit.cover,
+              fit: BoxFit.contain,
               errorBuilder: (context, error, stackTrace) => const SizedBox(),
             ),
           ],

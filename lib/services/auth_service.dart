@@ -4,36 +4,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:project/constants/api_constants.dart';
 
 class AuthService {
-  // static Future<Map<String, dynamic>> login(
-  //   String email,
-  //   String password,
-  // ) async {
-  //   final url = Uri.parse(ApiConstants.login);
-
-  //   final response = await http.post(
-  //     url,
-  //     headers: {"Content-Type": "application/json"},
-  //     body: jsonEncode({"email": email, "password": password}),
-  //   );
-
-  //   if (response.statusCode == 200) {
-  //     final data = jsonDecode(response.body);
-
-      
-
-  //     final prefs = await SharedPreferences.getInstance();
-  //     await prefs.setString('token', data['token']);
-
-  //     final user = data['id'];
-  //     await prefs.setString('userId', user);
-
-  //     return data;
-  //   } else {
-  //     final error = jsonDecode(response.body);
-  //     print(error);
-  //     throw Exception(error['error'] ?? 'Login failed');
-  //   }
-  // }
 
 
    static Future<Map<String, dynamic>> login(
@@ -64,31 +34,32 @@ class AuthService {
     }
   }
 
-  static Future<Map<String, dynamic>> signup(
-    String firstName,
-    String lastName,
-    String email,
-    String password,
-  ) async {
-    final url = Uri.parse(ApiConstants.register);
-    final response = await http.post(
-      url,
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({
-        "first_name": firstName,
-        "last_name": lastName,
-        "email": email,
-        "password": password,
-      }),
-    );
+static Future<Map<String, dynamic>> signup(
+  String firstName,
+  String lastName,
+  String email,
+  String password,
+) async {
+  final url = Uri.parse(ApiConstants.register);
+  final response = await http.post(
+    url,
+    headers: {"Content-Type": "application/json"},
+    body: jsonEncode({
+      "first_name": firstName,
+      "last_name": lastName,
+      "email": email,
+      "password": password,
+    }),
+  );
 
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    } else {
-      final error = jsonDecode(response.body);
-      throw Exception(error['error'] ?? 'Signup failed');
-    }
+  final responseBody = jsonDecode(response.body);
+  
+  if (response.statusCode == 200 || response.statusCode == 201) {
+    return responseBody; // Return the entire response body
+  } else {
+    throw Exception(responseBody['message'] ?? 'Signup failed');
   }
+}
 
   static Future<Map<String, dynamic>> logout() async {
     final url = Uri.parse(ApiConstants.logout);

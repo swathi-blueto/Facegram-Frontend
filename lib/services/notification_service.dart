@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:project/constants/api_constants.dart';
 import 'package:project/models/notification_model.dart';
@@ -24,9 +25,7 @@ class NotificationService {
 
     await _notificationsPlugin.initialize(
       initializationSettings,
-      onDidReceiveNotificationResponse: (NotificationResponse response) {
-        
-      },
+      onDidReceiveNotificationResponse: (NotificationResponse response) {},
     );
   }
 
@@ -41,17 +40,24 @@ class NotificationService {
         .asyncMap((data) async {
           if (data.isNotEmpty && data.first['is_read'] == false) {
             final fromUserId = data.first['from_user_id'];
+            print('from_user_id from notification: $fromUserId');
 
             Map<String, dynamic> fromUser = {};
 
-            final userResponse = await _supabase
-                .from('users')
-                .select('first_name, profile_pic')
-                .eq('id', fromUserId)
-                .maybeSingle();
+            if (fromUserId != null) {
+              try {
+                final userResponse = await _supabase
+                    .from('users')
+                    .select('first_name, profile_pic')
+                    .eq('id', fromUserId)
+                    .maybeSingle();
 
-            if (userResponse != null) {
-              fromUser = userResponse;
+                if (userResponse != null) {
+                  fromUser = userResponse;
+                }
+              } catch (e) {
+                print('Error fetching sender details: $e');
+              }
             }
 
             await showLocalNotification(
@@ -61,6 +67,8 @@ class NotificationService {
               payload: jsonEncode(data.first),
               imageUrl: fromUser['profile_pic'],
             );
+
+            await markNotificationAsRead(data.first['id'].toString());
           }
           return data;
         });
@@ -72,8 +80,6 @@ class NotificationService {
     required String payload,
     String? imageUrl,
   }) async {
-   
-
     BigPictureStyleInformation? bigPictureStyle;
     AndroidBitmap<Object>? largeIcon;
 
@@ -91,6 +97,10 @@ class NotificationService {
           );
 
           largeIcon = ByteArrayAndroidBitmap(bytes);
+        } else {
+          print(
+            'Failed to load notification image: HTTP Status ${response.statusCode}',
+          );
         }
       }
     } catch (e) {
@@ -101,7 +111,8 @@ class NotificationService {
         AndroidNotificationDetails(
           'channel_id',
           'Notifications',
-          importance: Importance.high,
+          channelDescription: 'Notifications from Facegram',
+          importance: Importance.max,
           priority: Priority.high,
           showWhen: true,
           largeIcon:
@@ -168,6 +179,41 @@ class NotificationService {
     }
   }
 
+  static Future<void> markNotificationAsRead(String notificationId) async {
+    try {
+      final token = await AuthService.getToken();
+      final userId = await AuthService.getCurrentUserId();
+
+      if (userId == null) {
+        throw Exception('User  not logged in');
+      }
+
+      final response = await http.put(
+        Uri.parse(
+          '${ApiConstants.baseUrl}/notifications/$notificationId/mark-read',
+        ),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'userId': userId, 'notificationId': notificationId}),
+      );
+
+      // print('Mark notification as read response: ${response.statusCode}');
+      // print('Response body: ${response.body}');
+
+      if (response.statusCode != 200) {
+        final errorData = jsonDecode(response.body);
+        throw Exception(
+          errorData['error'] ?? 'Failed to mark notification as read',
+        );
+      }
+    } catch (e) {
+      print('Error marking notification as read: $e');
+      throw Exception('Error marking notification as read: ${e.toString()}');
+    }
+  }
+
   static RealtimeChannel getRealtimeNotifications(
     String userId,
     Function(NotificationModel) onNotificationReceived,
@@ -191,10 +237,9 @@ class NotificationService {
                 final notification = NotificationModel.fromJson(
                   Map<String, dynamic>.from(data),
                 );
-
                 onNotificationReceived(notification);
               } catch (e) {
-                print(' Error parsing notification: $e');
+                print('Error parsing notification: $e');
               }
             } else {
               print('Notification data is null');
@@ -203,7 +248,7 @@ class NotificationService {
         )
         .subscribe((error, [_]) {
           if (error != null) {
-            print(' Channel subscription error: $error');
+            print('Channel subscription error: $error');
           } else {
             print('Successfully subscribed to notifications channel');
           }

@@ -5,6 +5,7 @@ import 'package:project/services/notification_service.dart';
 import 'package:project/services/auth_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({Key? key}) : super(key: key);
 
@@ -16,7 +17,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   List<NotificationModel> _notifications = [];
   bool _isLoading = true;
   String? _error;
-  late StreamSubscription _notificationStream;
+
   RealtimeChannel? _notificationChannel;
 
   @override
@@ -28,30 +29,36 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   @override
   void dispose() {
-   
-  _notificationChannel?.unsubscribe().then((_) {
-   
-  }).catchError((error) {
-    print(' Error unsubscribing from channel: $error');
-  });
- 
-    _notificationStream.cancel();
+
+    _notificationChannel?.unsubscribe().then((_) {
+      print('Successfully unsubscribed from notifications channel');
+    }).catchError((error) {
+      print('Error unsubscribing from channel: $error');
+    });
     super.dispose();
   }
 
   Future<void> _loadNotifications() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
     try {
       final userId = await AuthService.getCurrentUserId();
-      if (userId == null) throw Exception('User not logged in');
-      
+      if (userId == null) {
+        throw Exception('User not logged in');
+      }
+
       final response = await NotificationService.fetchNotifications(userId);
-      
+
       setState(() {
         _notifications = response
             .map((json) => NotificationModel.fromJson(json))
             .toList();
         _isLoading = false;
       });
+
+      _markAllNotificationsAsRead();
     } catch (e) {
       setState(() {
         _error = e.toString();
@@ -59,30 +66,52 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       });
     }
   }
-void _setupRealtimeListener() async {
- 
-  final userId = await AuthService.getCurrentUserId();
-  if (userId == null) {
-  
-    return;
+
+  void _setupRealtimeListener() async {
+    final userId = await AuthService.getCurrentUserId();
+    if (userId == null) {
+      return;
+    }
+
+
+    if (_notificationChannel != null) {
+      _notificationChannel!.unsubscribe();
+    }
+
+    _notificationChannel = NotificationService.getRealtimeNotifications(
+      userId,
+      (notification) {
+        if (mounted) {
+          setState(() {
+
+            _notifications.insert(0, notification);
+          });
+
+          NotificationService.markNotificationAsRead(notification.id);
+        } else {
+          print('Widget not mounted, cannot update UI');
+        }
+      },
+    );
   }
 
- 
-  _notificationChannel = NotificationService.getRealtimeNotifications(
-    userId,
-    (notification) {
-      
-      if (mounted) {
-        
+
+  Future<void> _markAllNotificationsAsRead() async {
+    for (var notification in _notifications) {
+      if (!notification.isRead) {
+        await NotificationService.markNotificationAsRead(notification.id);
+
         setState(() {
-          _notifications.insert(0, notification);
+          notification.isRead = true; // Directly modify if possible, or use copyWith
+          // If NotificationModel is truly immutable, you'd do:
+          // final index = _notifications.indexOf(notification);
+          // if (index != -1) {
+          //   _notifications[index] = notification.copyWith(isRead: true);
+          // }
         });
-      } else {
-        print(' Widget not mounted, cannot update UI');
       }
-    },
-  );
-}
+    }
+  }
 
 
   Future<void> _handleDismiss(String id) async {
@@ -98,19 +127,38 @@ void _setupRealtimeListener() async {
     }
   }
 
+  Future<void> _handleNotificationTap(NotificationModel notification) async {
+    if (!notification.isRead) {
+      await NotificationService.markNotificationAsRead(notification.id);
+      setState(() {
+        final index = _notifications.indexOf(notification);
+        if (index != -1) {
+          _notifications[index] = notification.copyWith(isRead: true);
+        }
+      });
+    }
+    switch (notification.type) {
+      case 'message':
+      // Navigator.push(context, MessageScreen(chatId: notification.relatedId));
+        break;
+      case 'friend_request':
+      // Show friend request dialog
+        break;
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Notifications'),
-         leading: IconButton(
+        leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
-           
-            Navigator.pushReplacementNamed(context, "/home"); 
+            Navigator.pushReplacementNamed(context, "/home");
           },
         ),
-
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -126,7 +174,7 @@ void _setupRealtimeListener() async {
     if (_isLoading) return const Center(child: CircularProgressIndicator());
     if (_error != null) return _buildErrorWidget();
     if (_notifications.isEmpty) return _buildEmptyWidget();
-    
+
     return RefreshIndicator(
       onRefresh: _loadNotifications,
       child: ListView.builder(
@@ -150,64 +198,42 @@ void _setupRealtimeListener() async {
     );
   }
 
-Widget _buildNotificationTile(NotificationModel notification) {
-  return ListTile(
-    leading: _buildNotificationLeading(notification),
-    title: Text(notification.title),
-    subtitle: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (notification.fromUserName != null)
-          Text(notification.fromUserName!,
-              style: TextStyle(fontWeight: FontWeight.bold)),
-        Text(notification.body),
-        Text(notification.timeAgo,
-            style: TextStyle(color: Colors.grey, fontSize: 12)),
-      ],
-    ),
-    trailing: !notification.isRead 
-        ? const Icon(Icons.circle, color: Colors.blue, size: 12)
-        : null,
-    onTap: () => _handleNotificationTap(notification),
-  );
-}
-
-Widget _buildNotificationLeading(NotificationModel notification) {
-  if (notification.fromUserAvatar != null) {
-    return CircleAvatar(
-      backgroundImage: NetworkImage(notification.fromUserAvatar!),
-      child: notification.fromUserAvatar == null 
-          ? Icon(notification.icon, color: notification.iconColor)
+  Widget _buildNotificationTile(NotificationModel notification) {
+    return ListTile(
+      leading: _buildNotificationLeading(notification),
+      title: Text(notification.title),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (notification.fromUserName != null)
+            Text(notification.fromUserName!,
+                style: const TextStyle(fontWeight: FontWeight.bold)),
+          Text(notification.body),
+          Text(notification.timeAgo,
+              style: const TextStyle(color: Colors.grey, fontSize: 12)),
+        ],
+      ),
+      trailing: !notification.isRead
+          ? const Icon(Icons.circle, color: Colors.blue, size: 12)
           : null,
+      onTap: () => _handleNotificationTap(notification),
     );
   }
-  return CircleAvatar(
-    child: Icon(notification.icon, color: notification.iconColor),
-  );
-}
 
-  Widget _buildNotificationIcon(NotificationModel notification) {
-    switch (notification.type) {
-      case 'message':
-        return const CircleAvatar(child: Icon(Icons.message));
-      case 'friend_request':
-        return const CircleAvatar(child: Icon(Icons.person_add));
-      default:
-        return const CircleAvatar(child: Icon(Icons.notifications));
+  Widget _buildNotificationLeading(NotificationModel notification) {
+    if (notification.fromUserAvatar != null) {
+      return CircleAvatar(
+        backgroundImage: NetworkImage(notification.fromUserAvatar!),
+        child: notification.fromUserAvatar == null
+            ? Icon(notification.icon, color: notification.iconColor)
+            : null,
+      );
     }
+    return CircleAvatar(
+      child: Icon(notification.icon, color: notification.iconColor),
+    );
   }
 
-  void _handleNotificationTap(NotificationModel notification) {
-    // Handle navigation based on notification type
-    switch (notification.type) {
-      case 'message':
-        // Navigator.push(context, MessageScreen(chatId: notification.relatedId));
-        break;
-      case 'friend_request':
-        // Show friend request dialog
-        break;
-    }
-  }
 
   Widget _buildErrorWidget() {
     return Center(
@@ -216,7 +242,7 @@ Widget _buildNotificationLeading(NotificationModel notification) {
         children: [
           const Icon(Icons.error_outline, size: 50, color: Colors.red),
           const SizedBox(height: 16),
-          Text('Failed to load notifications', 
+          Text('Failed to load notifications',
               style: Theme.of(context).textTheme.titleMedium),
           Text(_error!, style: Theme.of(context).textTheme.bodySmall),
           const SizedBox(height: 20),
@@ -246,5 +272,3 @@ Widget _buildNotificationLeading(NotificationModel notification) {
     );
   }
 }
-
-

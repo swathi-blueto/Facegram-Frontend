@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:project/models/user_profile.dart';
 import 'package:project/services/auth_service.dart';
 import 'package:project/services/friend_service.dart';
@@ -21,11 +22,40 @@ class _PotentialFriendsScreenState extends State<PotentialFriendsScreen> {
   bool _isCanceling = false;
   String? _errorMessage;
   String? _currentUser;
+  final FToast _fToast = FToast();
 
   @override
   void initState() {
     super.initState();
+    _fToast.init(context);
     _initializeData();
+  }
+
+  void _showToast(String message, {bool isError = false}) {
+    _fToast.removeQueuedCustomToasts();
+    _fToast.showToast(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(25.0),
+          color: isError ? Colors.red : Colors.blue,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(isError ? Icons.error_outline : Icons.check_circle, 
+                color: Colors.white),
+            const SizedBox(width: 12),
+            Text(
+              message,
+              style: const TextStyle(color: Colors.white),
+            ),
+          ],
+        ),
+      ),
+      gravity: ToastGravity.TOP,
+      toastDuration: const Duration(seconds: 2),
+    );
   }
 
   Future<void> _initializeData() async {
@@ -118,7 +148,7 @@ class _PotentialFriendsScreenState extends State<PotentialFriendsScreen> {
     );
   }
 
-  Widget _buildPotentialFriendsTab() {
+    Widget _buildPotentialFriendsTab() {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -296,6 +326,9 @@ Widget _buildIncomingRequestsTab() {
     );
   }
 
+  // ... [Keep all your existing _buildPotentialFriendsTab, _buildSentRequestsTab, 
+  // _buildIncomingRequestsTab, _buildErrorWidget, _buildEmptyWidget methods exactly the same]
+
   Future<void> _sendFriendRequest(String receiverId) async {
     try {
       setState(() => _isSending = true);
@@ -303,15 +336,11 @@ Widget _buildIncomingRequestsTab() {
 
       if (success && mounted) {
         await _loadData();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Friend request sent!')),
-        );
+        _showToast('Friend request sent!');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to send request: $e')),
-        );
+        _showToast('Failed to send request: ${e.toString()}', isError: true);
       }
     } finally {
       if (mounted) setState(() => _isSending = false);
@@ -325,15 +354,11 @@ Widget _buildIncomingRequestsTab() {
 
       if (success && mounted) {
         await _loadData();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Request cancelled!')),
-        );
+        _showToast('Request cancelled!');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to cancel request: $e')),
-        );
+        _showToast('Failed to cancel request: ${e.toString()}', isError: true);
       }
     } finally {
       if (mounted) setState(() => _isCanceling = false);
@@ -347,15 +372,11 @@ Widget _buildIncomingRequestsTab() {
 
       if (success && mounted) {
         await _loadData();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Friend request accepted!')),
-        );
+        _showToast('Friend request accepted!');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to accept request: $e')),
-        );
+        _showToast('Failed to accept request: ${e.toString()}', isError: true);
       }
     } finally {
       if (mounted) setState(() => _isAccepting = false);
@@ -389,15 +410,11 @@ Widget _buildIncomingRequestsTab() {
 
       if (success && mounted) {
         await _loadData();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Friend request rejected')),
-        );
+        _showToast('Friend request rejected');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to reject request: $e')),
-        );
+        _showToast('Failed to reject request: ${e.toString()}', isError: true);
       }
     } finally {
       if (mounted) setState(() => _isRejecting = false);

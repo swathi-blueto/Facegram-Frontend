@@ -9,8 +9,8 @@ class PostModel {
   final String? visibility;
   final List<Comment>? comments;
   final List<Like>? likes;
-  final String? username; // You might need to get this from a separate field
-  final String? userProfilePic; // You might need to get this from a separate field
+  final String? username; 
+  final String? userProfilePic; 
 
   PostModel({
     this.id,
@@ -43,7 +43,7 @@ class PostModel {
       likes: json['likes'] != null
           ? (json['likes'] as List).map((like) => Like.fromJson(like)).toList()
           : null,
-      // You might need to adjust these based on your actual API response
+      
       username: json['username'] ?? json['user']?['username'],
       userProfilePic: json['userProfilePic'] ?? json['user']?['profile_pic'],
     );

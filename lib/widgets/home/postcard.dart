@@ -1,221 +1,3 @@
-// import 'package:project/screens/comments_page.dart';
-// import 'package:project/services/auth_service.dart';
-// import 'package:flutter/material.dart';
-// import 'package:project/services/post_service.dart';
-
-// class PostCard extends StatefulWidget {
-//   final Map<String, dynamic> post;
-
-//   const PostCard({super.key, required this.post});
-
-//   @override
-//   State<PostCard> createState() => _PostCardState();
-// }
-
-// class _PostCardState extends State<PostCard> {
-//   late int likesCount;
-//   late int commentsCount;
-//   bool isLiked = false;
-
-//   @override
-//   void initState() {
-//     super.initState();
-
-//     final likes = widget.post['likes'] as List<dynamic>?;
-
-//     likesCount = likes?.length ?? 0;
-//     commentsCount = widget.post['comments']?.length ?? 0;
-
-//     _initLikeStatus();
-//   }
-
-//   void _initLikeStatus() async {
-//     final currentUserId = await AuthService.getCurrentUserId();
-
-//     final likes = widget.post['likes'] as List<dynamic>?;
-//     final alreadyLiked =
-//         likes?.any((like) => like['user_id'] == currentUserId) ?? false;
-
-//     setState(() {
-//       isLiked = alreadyLiked;
-//     });
-//   }
-
-//   void toggleLike() async {
-//   setState(() {
-//     isLiked = !isLiked;
-//     likesCount += isLiked ? 1 : -1;
-//   });
-
-//   bool success = await PostService.likeOrUnlikePost(widget.post['id'], isLiked);
-
-//   if (!success) {
-
-//     setState(() {
-//       isLiked = !isLiked;
-//       likesCount += isLiked ? 1 : -1;
-//     });
-
-//     ScaffoldMessenger.of(context).showSnackBar(
-//       SnackBar(content: Text('Failed to update like status')),
-//     );
-//   }
-// }
-
-//   void addComment(String comment) {
-//     setState(() {
-//       commentsCount += 1;
-//     });
-//     Navigator.of(context).pop();
-//   }
-
-//  void navigateToComments() {
-//   final postId = widget.post['id'];
-//   if (postId != null && postId is String) {
-//     Navigator.push(
-//       context,
-//       MaterialPageRoute(builder: (_) => CommentsPage(postId: postId)),
-//     );
-//   } else {
-//     ScaffoldMessenger.of(context).showSnackBar(
-//       const SnackBar(content: Text('Invalid post ID.')),
-//     );
-//   }
-// }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     final post = widget.post;
-
-//     return Card(
-//       margin: const EdgeInsets.only(top: 5),
-//       elevation: 5,
-//       shape: const RoundedRectangleBorder(
-//         borderRadius: BorderRadius.zero,
-//       ),
-//       child: Column(
-//         crossAxisAlignment: CrossAxisAlignment.start,
-//         children: [
-//           Padding(
-//             padding: const EdgeInsets.all(8.0),
-//             child: Row(
-//               children: [
-//                 CircleAvatar(
-//                   backgroundImage: post['user_profile_pic'] != null &&
-//                           post['user_profile_pic'].isNotEmpty
-//                       ? NetworkImage(post['user_profile_pic'])
-//                       : const NetworkImage(
-//                           "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS9tu0c_cjxMIIll3_E23_TRiAGPLXAW5WJFg&s"),
-//                   radius: 20,
-//                 ),
-//                 const SizedBox(width: 10),
-//                 Expanded(
-//                   child: Text(
-//                     post['users']?['first_name'] ?? "User Name",
-//                     style: const TextStyle(
-//                       fontWeight: FontWeight.bold,
-//                       fontSize: 16,
-//                     ),
-//                   ),
-//                 ),
-//               ],
-//             ),
-//           ),
-//           Padding(
-//             padding: const EdgeInsets.all(8.0),
-//             child: Text(
-//               post['content'] ?? '',
-//               style: const TextStyle(fontSize: 16),
-//             ),
-//           ),
-//           if (post['image_url'] != null)
-//             Image.network(
-//               post['image_url'],
-//               height: 250,
-//               width: double.infinity,
-//               fit: BoxFit.cover,
-//             ),
-//           Container(
-//             decoration: BoxDecoration(
-//               border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
-//             ),
-//             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
-//             child: Row(
-//               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//               children: [
-//                 Row(
-//                   children: [
-//                     const Icon(Icons.thumb_up, size: 18, color: Colors.blue),
-//                     const SizedBox(width: 4),
-//                     Text(
-//                       "$likesCount",
-//                       style: const TextStyle(fontWeight: FontWeight.w500),
-//                     ),
-//                   ],
-//                 ),
-//                 Row(
-//                   children: [
-//                     const Icon(Icons.comment_outlined,
-//                         size: 18, color: Colors.grey),
-//                     const SizedBox(width: 4),
-//                     Text(
-//                       "$commentsCount",
-//                       style: const TextStyle(fontWeight: FontWeight.w500),
-//                     ),
-//                   ],
-//                 ),
-//               ],
-//             ),
-//           ),
-//           Padding(
-//             padding: const EdgeInsets.symmetric(horizontal: 8.0),
-//             child: Row(
-//               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//               children: [
-//                 Row(
-//                   children: [
-//                     IconButton(
-//                       icon: Icon(
-//                         isLiked
-//                             ? Icons.thumb_up_alt
-//                             : Icons.thumb_up_alt_outlined,
-//                       ),
-//                       onPressed: toggleLike,
-//                       color: Colors.blue,
-//                     ),
-//                     const Text("Like"),
-//                   ],
-//                 ),
-//                 Row(
-//                   children: [
-//                     IconButton(
-//                       icon: const Icon(Icons.comment_outlined),
-//                       onPressed: navigateToComments,
-//                       color: Colors.grey,
-//                     ),
-//                     const Text("Comment"),
-//                   ],
-//                 ),
-//                 Row(
-//                   children: [
-//                     IconButton(
-//                       icon: const Icon(Icons.share),
-//                       onPressed: () {},
-//                       color: Colors.grey,
-//                     ),
-//                     const Text("Share"),
-//                   ],
-//                 ),
-//               ],
-//             ),
-//           ),
-//           const SizedBox(height: 10),
-//         ],
-//       ),
-//     );
-//   }
-// }
-
 import 'package:project/screens/comments_page.dart';
 import 'package:project/services/auth_service.dart';
 import 'package:flutter/material.dart';
@@ -224,6 +6,7 @@ import 'package:project/services/friend_service.dart';
 import 'package:project/services/chat_service.dart';
 import 'package:project/models/user_profile.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class PostCard extends StatefulWidget {
   final Map<String, dynamic> post;
@@ -235,6 +18,7 @@ class PostCard extends StatefulWidget {
 }
 
 class _PostCardState extends State<PostCard> {
+  late FToast fToast;
   late int likesCount;
   late int commentsCount;
   bool isLiked = false;
@@ -245,13 +29,48 @@ class _PostCardState extends State<PostCard> {
   @override
   void initState() {
     super.initState();
-
+    fToast = FToast();
+    fToast.init(context);
+    
     final likes = widget.post['likes'] as List<dynamic>?;
     likesCount = likes?.length ?? 0;
     commentsCount = widget.post['comments']?.length ?? 0;
 
     _initLikeStatus();
     _fetchFriends();
+  }
+
+  void _showToast(String message, {bool isError = false}) {
+    fToast.removeQueuedCustomToasts();
+    fToast.showToast(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(25.0),
+          color: isError ? Colors.red : Colors.blue,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              isError ? Icons.error_outline : Icons.check_circle,
+              color: Colors.white,
+            ),
+            const SizedBox(width: 12),
+            Flexible(
+              child: Text(
+                message,
+                style: const TextStyle(color: Colors.white),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
+      gravity: ToastGravity.BOTTOM,
+      toastDuration: const Duration(seconds: 2),
+    );
   }
 
   Future<void> _fetchFriends() async {
@@ -266,9 +85,7 @@ class _PostCardState extends State<PostCard> {
       });
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load friends: ${e.toString()}')),
-        );
+        _showToast('Failed to load friends', isError: true);
       }
     }
   }
@@ -303,9 +120,7 @@ class _PostCardState extends State<PostCard> {
         likesCount += isLiked ? 1 : -1;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to update like status')),
-      );
+      _showToast('Failed to update like status', isError: true);
     }
   }
 
@@ -324,9 +139,7 @@ class _PostCardState extends State<PostCard> {
         MaterialPageRoute(builder: (_) => CommentsPage(postId: postId)),
       );
     } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Invalid post ID.')));
+      _showToast('Invalid post ID', isError: true);
     }
   }
 
@@ -410,15 +223,12 @@ class _PostCardState extends State<PostCard> {
           .toList();
 
       if (selectedFriendIds.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please select at least one friend')),
-        );
+        _showToast('Please select at least one friend', isError: true);
         return;
       }
 
       final postContent = widget.post['content'] ?? '';
       final imageUrl = widget.post['image_url'] as String?;
-      print(imageUrl);
 
       for (final friendId in selectedFriendIds) {
         try {
@@ -441,24 +251,17 @@ class _PostCardState extends State<PostCard> {
           }
         } catch (e) {
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'Failed to share with ${friends.firstWhere((f) => f.id == friendId).firstName ?? 'friend'}: ${e.toString()}',
-                ),
-              ),
+            _showToast(
+              'Failed to share with ${friends.firstWhere((f) => f.id == friendId).firstName ?? 'friend'}',
+              isError: true,
             );
           }
         }
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Shared with ${selectedFriendIds.length} ${selectedFriendIds.length == 1 ? 'friend' : 'friends'}',
-            ),
-          ),
+        _showToast(
+          'Shared with ${selectedFriendIds.length} ${selectedFriendIds.length == 1 ? 'friend' : 'friends'}',
         );
       }
 
@@ -469,52 +272,49 @@ class _PostCardState extends State<PostCard> {
       });
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to share post: ${e.toString()}')),
-        );
+        _showToast('Failed to share post', isError: true);
       }
     }
   }
 
-Widget _buildNetworkImage(String imageUrl) {
-  try {
-    // Validate the URL first
-    final uri = Uri.tryParse(imageUrl);
-    if (uri == null || !uri.hasAbsolutePath) {
-      return _buildImageErrorWidget();
-    }
+  Widget _buildNetworkImage(String imageUrl) {
+    try {
+      final uri = Uri.tryParse(imageUrl);
+      if (uri == null || !uri.hasAbsolutePath) {
+        return _buildImageErrorWidget();
+      }
 
-    return CachedNetworkImage(
-      imageUrl: imageUrl,
-      height: 250,
-      width: double.infinity,
-      fit: BoxFit.cover,
-      httpHeaders: const {
-        'Accept': 'image/*', 
-      },
-      progressIndicatorBuilder: (context, url, progress) => Container(
+      return CachedNetworkImage(
+        imageUrl: imageUrl,
         height: 250,
-        color: Colors.grey[200],
-        child: Center(
-          child: CircularProgressIndicator(
-            value: progress.progress,
+        width: double.infinity,
+        fit: BoxFit.cover,
+        httpHeaders: const {
+          'Accept': 'image/*',
+        },
+        progressIndicatorBuilder: (context, url, progress) => Container(
+          height: 250,
+          color: Colors.grey[200],
+          child: Center(
+            child: CircularProgressIndicator(
+              value: progress.progress,
+            ),
           ),
         ),
-      ),
-      errorWidget: (context, url, error) => _buildImageErrorWidget(),
-    );
-  } catch (e) {
-    return _buildImageErrorWidget();
+        errorWidget: (context, url, error) => _buildImageErrorWidget(),
+      );
+    } catch (e) {
+      return _buildImageErrorWidget();
+    }
   }
-}
 
-Widget _buildImageErrorWidget() {
-  return Container(
-    height: 250,
-    color: Colors.grey[200],
-    child: const Icon(Icons.broken_image, color: Colors.grey),
-  );
-}
+  Widget _buildImageErrorWidget() {
+    return Container(
+      height: 250,
+      color: Colors.grey[200],
+      child: const Icon(Icons.broken_image, color: Colors.grey),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -534,11 +334,11 @@ Widget _buildImageErrorWidget() {
                 CircleAvatar(
                   backgroundImage:
                       post['user_profile_pic'] != null &&
-                          post['user_profile_pic'].isNotEmpty
-                      ? NetworkImage(post['user_profile_pic'])
-                      : const NetworkImage(
-                          "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS9tu0c_cjxMIIll3_E23_TRiAGPLXAW5WJFg&s",
-                        ),
+                              post['user_profile_pic'].isNotEmpty
+                          ? NetworkImage(post['user_profile_pic'])
+                          : const NetworkImage(
+                              "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS9tu0c_cjxMIIll3_E23_TRiAGPLXAW5WJFg&s",
+                            ),
                   radius: 20,
                 ),
                 const SizedBox(width: 10),
@@ -562,32 +362,7 @@ Widget _buildImageErrorWidget() {
             ),
           ),
           if (post['image_url'] != null && post['image_url'].isNotEmpty)
-            Image.network(
-              post['image_url'],
-              height: 250,
-              width: double.infinity,
-              fit: BoxFit.contain,
-              loadingBuilder: (context, child, loadingProgress) {
-                if (loadingProgress == null) return child;
-                return Container(
-                  height: 250,
-                  color: Colors.grey[200],
-                  child: Center(
-                    child: CircularProgressIndicator(
-                      value: loadingProgress.expectedTotalBytes != null
-                          ? loadingProgress.cumulativeBytesLoaded /
-                                loadingProgress.expectedTotalBytes!
-                          : null,
-                    ),
-                  ),
-                );
-              },
-              errorBuilder: (context, error, stackTrace) => Container(
-                height: 250,
-                color: Colors.grey[200],
-                child: const Icon(Icons.broken_image, color: Colors.grey),
-              ),
-            ),
+            _buildNetworkImage(post['image_url']),
           Container(
             decoration: BoxDecoration(
               border: Border(bottom: BorderSide(color: Colors.grey.shade300)),

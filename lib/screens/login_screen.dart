@@ -1,4 +1,6 @@
+
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import '../services/auth_service.dart';
 import '../widgets/auth/curved_clipper.dart';
 import '../widgets/auth/custom_textfield.dart';
@@ -13,31 +15,72 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+  final _toast = FToast();
 
-  void handleLogin() async {
-    final email = emailController.text;
-    final password = passwordController.text;
-
-    try {
-      final response = await AuthService.login(email, password);
-      final role = response['role'] ?? 'user';
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Login Successful")),
-      );
-
-      // Navigate based on role
-      if (role == 'admin') {
-        Navigator.pushReplacementNamed(context, '/admin-dashboard');
-      } else {
-        Navigator.pushReplacementNamed(context, '/home');
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Login Failed: $e")),
-      );
-    }
+  @override
+  void initState() {
+    super.initState();
+    _toast.init(context);
   }
+
+void _showToast(String message, {bool isError = false}) {
+  _toast.removeQueuedCustomToasts();
+  _toast.showToast(
+    child: Container(
+      constraints: BoxConstraints(
+        maxWidth: MediaQuery.of(context).size.width * 0.9, 
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(25.0),
+        color: isError ? Colors.red : Colors.blueAccent,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            isError ? Icons.error_outline : Icons.check_circle,
+            color: Colors.white,
+            size: 24, 
+          ),
+          const SizedBox(width: 12),
+          Flexible( 
+            child: Text(
+              message,
+              style: const TextStyle(color: Colors.white),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis, 
+            ),
+          ),
+        ],
+      ),
+    ),
+    gravity: ToastGravity.TOP,
+    toastDuration: const Duration(seconds: 3),
+  );
+}
+
+ void handleLogin() async {
+  final email = emailController.text;
+  final password = passwordController.text;
+
+  try {
+    final response = await AuthService.login(email, password);
+    final role = response['role'] ?? 'user';
+
+    _showToast("Login Successful");
+
+    if (role == 'admin') {
+      Navigator.pushReplacementNamed(context, '/admin-dashboard');
+    } else {
+      Navigator.pushReplacementNamed(context, '/home');
+    }
+  } catch (e) {
+   
+    _showToast(e.toString(), isError: true);
+  }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -57,8 +100,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       TextButton(
-                        onPressed: () =>
-                            Navigator.pushNamed(context, '/signup'),
+                        onPressed: () => Navigator.pushNamed(context, '/signup'),
                         child: const Text(
                           "Sign up",
                           style: TextStyle(color: Colors.blue),

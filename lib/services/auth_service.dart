@@ -40,24 +40,39 @@ static Future<Map<String, dynamic>> signup(
   String email,
   String password,
 ) async {
-  final url = Uri.parse(ApiConstants.register);
-  final response = await http.post(
-    url,
-    headers: {"Content-Type": "application/json"},
-    body: jsonEncode({
-      "first_name": firstName,
-      "last_name": lastName,
-      "email": email,
-      "password": password,
-    }),
-  );
+  try {
+    final url = Uri.parse(ApiConstants.register);
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "first_name": firstName,
+        "last_name": lastName,
+        "email": email,
+        "password": password,
+      }),
+    );
 
-  final responseBody = jsonDecode(response.body);
-  
-  if (response.statusCode == 200 || response.statusCode == 201) {
-    return responseBody; // Return the entire response body
-  } else {
-    throw Exception(responseBody['message'] ?? 'Signup failed');
+    final responseBody = jsonDecode(response.body);
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      
+      if (responseBody['token'] != null) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('token', responseBody['token']);
+        await prefs.setString('userId', responseBody['id']);
+        await prefs.setString('role', responseBody['role'] ?? 'user');
+      }
+      return responseBody;
+    } else {
+      throw Exception(responseBody['message'] ?? 'Signup failed');
+    }
+  } on http.ClientException catch (e) {
+    throw Exception('Network error: ${e.message}');
+  } on FormatException {
+    throw Exception('Invalid server response');
+  } catch (e) {
+    throw Exception('Signup failed: ${e.toString()}');
   }
 }
 
@@ -94,3 +109,5 @@ static Future<Map<String, dynamic>> signup(
     return prefs.getString('role');
   }
 }
+
+

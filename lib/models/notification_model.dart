@@ -12,7 +12,7 @@ class NotificationModel {
   final String? relatedId;
   final String? commentId;
   final DateTime createdAt;
-  final bool isRead;
+  bool isRead; 
 
   NotificationModel({
     required this.id,
@@ -26,13 +26,12 @@ class NotificationModel {
     this.relatedId,
     this.commentId,
     required this.createdAt,
-    required this.isRead,
+    this.isRead = false, // Default to false
   });
 
   factory NotificationModel.fromJson(Map<String, dynamic> json) {
-    
     final fromUser = json['from_user_id'] is Map ? json['from_user_id'] : {};
-    
+
     return NotificationModel(
       id: json['id']?.toString() ?? '',
       userId: json['user_id']?.toString() ?? '',
@@ -40,12 +39,42 @@ class NotificationModel {
       fromUserName: fromUser['first_name']?.toString(),
       fromUserAvatar: fromUser['profile_pic']?.toString(),
       title: _getTitleFromType(json['type']),
-      body: json['body'] ?? json['message'] ?? '', // Use both possible fields
+      body: json['body'] ?? json['message'] ?? '',
       type: json['type']?.toString() ?? 'general',
       relatedId: json['related_id']?.toString(),
       commentId: json['comment_id']?.toString(),
       createdAt: DateTime.parse(json['created_at']?.toString() ?? DateTime.now().toIso8601String()),
       isRead: json['is_read'] ?? false,
+    );
+  }
+
+  NotificationModel copyWith({
+    String? id,
+    String? userId,
+    String? fromUserId,
+    String? fromUserName,
+    String? fromUserAvatar,
+    String? title,
+    String? body,
+    String? type,
+    String? relatedId,
+    String? commentId,
+    DateTime? createdAt,
+    bool? isRead,
+  }) {
+    return NotificationModel(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      fromUserId: fromUserId ?? this.fromUserId,
+      fromUserName: fromUserName ?? this.fromUserName,
+      fromUserAvatar: fromUserAvatar ?? this.fromUserAvatar,
+      title: title ?? this.title,
+      body: body ?? this.body,
+      type: type ?? this.type,
+      relatedId: relatedId ?? this.relatedId,
+      commentId: commentId ?? this.commentId,
+      createdAt: createdAt ?? this.createdAt,
+      isRead: isRead ?? this.isRead,
     );
   }
 

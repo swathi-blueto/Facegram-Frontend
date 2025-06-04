@@ -8,34 +8,28 @@ import 'dart:io';
 
 
 class UserService {
-  Future<UserProfile?> fetchUserProfile(String userId) async {
-    try {
-      final token = await AuthService.getToken();
-      if (token == null) {
-        print('No token found. User may not be logged in.');
-        return null;
-      }
+Future<Map<String, dynamic>?> fetchUserProfile(String userId) async {
+  try {
+    final token = await AuthService.getToken();
+    if (token == null) return null;
 
-      final url = Uri.parse(
-          ApiConstants.fetchUserDetails.replaceFirst("userId", userId));
-      final response = await http.get(url, headers: {
-        "Content-Type": "application/json",
+    final response = await http.get(
+      Uri.parse(ApiConstants.fetchUserDetails.replaceFirst("userId", userId)),
+      headers: {
         'Authorization': 'Bearer $token',
-      });
+        'Content-Type': 'application/json',
+      },
+    );
 
-      if (response.statusCode == 200) {
-        final jsonData = json.decode(response.body);
-        
-        if (jsonData['data'].isNotEmpty) {
-          return UserProfile.fromJson(jsonData['data'][0]);
-        }
-      }
-      return null;
-    } catch (e) {
-      print('Error Fetching User profile: $e');
-      return null;
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
     }
+    return null;
+  } catch (e) {
+    debugPrint('Error fetching profile: $e');
+    return null;
   }
+}
 
   Future<UserProfile?> createUserProfile(
     String userId,

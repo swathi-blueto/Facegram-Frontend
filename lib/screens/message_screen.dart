@@ -3,6 +3,7 @@ import 'package:project/models/message_model.dart';
 import 'package:project/services/chat_service.dart';
 import 'package:project/services/auth_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:fluttertoast/fluttertoast.dart'; // Added for toast
 
 class MessageScreen extends StatefulWidget {
   final String chatId;
@@ -28,16 +29,47 @@ class _MessageScreenState extends State<MessageScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   late List<Message> _messages;
-  String? _currentUser ;
+  String? _currentUser;
   bool _isSending = false;
   bool _isLoading = false;
   RealtimeChannel? _messageSubscription;
+  final FToast _toast = FToast();
 
   @override
   void initState() {
     super.initState();
+    _toast.init(context); 
     _messages = List.from(widget.initialMessages);
     _initializeData();
+  }
+
+  void _showToast(String message, {bool isError = false}) {
+    _toast.removeQueuedCustomToasts();
+    _toast.showToast(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(25.0),
+          color: isError ? Colors.red : Colors.green,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              isError ? Icons.error_outline : Icons.check_circle,
+              color: Colors.white,
+            ),
+            const SizedBox(width: 12),
+            Text(
+              message,
+              style: const TextStyle(color: Colors.white),
+            ),
+          ],
+        ),
+      ),
+      gravity: ToastGravity.TOP,
+      toastDuration: const Duration(seconds: 2),
+    );
   }
 
   Future<void> _initializeData() async {
@@ -51,7 +83,7 @@ class _MessageScreenState extends State<MessageScreen> {
   }
 
   Future<void> _getCurrentUserId() async {
-    _currentUser  = await AuthService.getCurrentUserId();
+    _currentUser = await AuthService.getCurrentUserId();
   }
 
   Future<void> _loadMessages() async {
@@ -65,9 +97,7 @@ class _MessageScreenState extends State<MessageScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load messages: ${e.toString()}')),
-        );
+        _showToast('Failed to load messages: ${e.toString()}', isError: true);
       }
     }
   }
@@ -81,7 +111,7 @@ class _MessageScreenState extends State<MessageScreen> {
   }
 
   Future<void> _sendMessage() async {
-    if (_messageController.text.trim().isEmpty || _currentUser  == null || _isSending) return;
+    if (_messageController.text.trim().isEmpty || _currentUser == null || _isSending) return;
 
     setState(() => _isSending = true);
     final messageContent = _messageController.text.trim();
@@ -90,27 +120,22 @@ class _MessageScreenState extends State<MessageScreen> {
     try {
       await ChatService.sendMessage(
         widget.chatId,
-        _currentUser !,
+        _currentUser!,
         messageContent,
       );
       setState(() => _isSending = false);
     } catch (e) {
       if (mounted) {
         setState(() => _isSending = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to send message: ${e.toString()}')),
-        );
+        _showToast('Failed to send message: ${e.toString()}', isError: true);
         _messageController.text = messageContent;
       }
     }
   }
 
-
   void _subscribeToMessages() {
-    
     _messageSubscription?.unsubscribe();
     
-   
     _messageSubscription = ChatService.subscribeToMessages(
       widget.chatId,
       (newMessage) {
@@ -164,7 +189,7 @@ class _MessageScreenState extends State<MessageScreen> {
                     itemCount: _messages.length,
                     itemBuilder: (context, index) {
                       final message = _messages[index];
-                      final isMe = message.senderId == _currentUser ;
+                      final isMe = message.senderId == _currentUser;
                       return Align(
                         alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
                         child: Container(

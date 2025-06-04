@@ -3,6 +3,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:project/services/auth_service.dart';
 import 'package:project/services/post_service.dart';
 import 'dart:io';
+import 'package:fluttertoast/fluttertoast.dart'; // Added for toast
 
 class CreatePostScreen extends StatefulWidget {
   const CreatePostScreen({super.key});
@@ -17,6 +18,13 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   File? _imageFile;
   String _visibility = 'public';
   bool _isLoading = false;
+  final FToast _toast = FToast(); 
+
+  @override
+  void initState() {
+    super.initState();
+    _toast.init(context); 
+  }
 
   Future<void> _pickImage() async {
     final pickedFile = await ImagePicker().pickImage(
@@ -26,6 +34,35 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     if (pickedFile != null) {
       setState(() => _imageFile = File(pickedFile.path));
     }
+  }
+
+  void _showToast(String message, {bool isError = false}) {
+    _toast.removeQueuedCustomToasts();
+    _toast.showToast(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(25.0),
+          color: isError ? Colors.red : Colors.green,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              isError ? Icons.error_outline : Icons.check_circle,
+              color: Colors.white,
+            ),
+            const SizedBox(width: 12),
+            Text(
+              message,
+              style: const TextStyle(color: Colors.white),
+            ),
+          ],
+        ),
+      ),
+      gravity: ToastGravity.TOP,
+      toastDuration: const Duration(seconds: 2),
+    );
   }
 
   Future<void> _submitPost() async {
@@ -45,15 +82,11 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 
       if (mounted) {
         Navigator.pushReplacementNamed(context, "/home");
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Post created successfully!')),
-        );
+        _showToast('Post created successfully!');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.toString()}')),
-        );
+        _showToast('Error: ${e.toString()}', isError: true);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -109,7 +142,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Profile Row
+                
                   Row(
                     children: [
                       const CircleAvatar(radius: 22, child: Icon(Icons.person)),
@@ -137,7 +170,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 
                   const SizedBox(height: 20),
 
-                  // Post Content
+                  
                   TextFormField(
                     controller: _contentController,
                     decoration: const InputDecoration(
@@ -156,7 +189,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 
                   const SizedBox(height: 20),
 
-                  // Image preview
+                 
                   if (_imageFile != null)
                     Stack(
                       alignment: Alignment.topRight,
@@ -179,7 +212,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 
                   const SizedBox(height: 10),
 
-                  // Image Upload Button
+              
                   OutlinedButton.icon(
                     onPressed: _pickImage,
                     icon: const Icon(Icons.photo_library),
@@ -196,7 +229,6 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
         ),
       ),
 
-     
       bottomNavigationBar: BottomAppBar(
         color: theme.colorScheme.surfaceVariant,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -211,13 +243,13 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
             const SizedBox(width: 20),
             IconButton(
               icon: const Icon(Icons.emoji_emotions),
-              onPressed: () {}, // emoji picker
+              onPressed: () {}, 
               tooltip: 'Emoji',
             ),
             const SizedBox(width: 20),
             IconButton(
               icon: const Icon(Icons.location_on_outlined),
-              onPressed: () {}, // location picker
+              onPressed: () {}, 
               tooltip: 'Location',
             ),
           ],

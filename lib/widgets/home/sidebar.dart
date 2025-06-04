@@ -90,7 +90,7 @@ class _MySidebarState extends State<MySidebar> {
                       final userService = UserService();
                       final profile =
                           await userService.fetchUserProfile(userId);
-                      print('$profile in sidebar');
+                     
 
                       if (!context.mounted) return;
 
@@ -129,7 +129,7 @@ class _MySidebarState extends State<MySidebar> {
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Text(
-              'project v1.0.0',
+              'Facegram v1.0.0',
               style: TextStyle(
                 color: Colors.grey.shade600,
                 fontSize: 12,
